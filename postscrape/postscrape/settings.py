@@ -7,6 +7,28 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+from shutil import which
+
+SELENIUM_DRIVER_NAME = "chrome"
+
+SELENIUM_DRIVER_EXECUTABLE_PATH = which("chromedriver")
+
+SELENIUM_DRIVER_ARGUMENTS = ["-headless"]
+
+
+SPLASH_URL = "http://192.168.59.103:8050"
+DOWNLOADER_MIDDLEWARES = {
+    "scrapy_selenium.SeleniumMiddleware": 800,
+    "scrapy_splash.SplashCookiesMiddleware": 723,
+    "scrapy_splash.SplashMiddleware": 725,
+    "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
+}
+SPIDER_MIDDLEWARES = {
+    "scrapy_splash.SplashDeduplicateArgsMiddleware": 100,
+}
+DUPEFILTER_CLASS = "scrapy_splash.SplashAwareDupeFilter"
+HTTPCACHE_STORAGE = "scrapy_splash.SplashAwareFSCacheStorage"
+### my changes above
 BOT_NAME = "postscrape"
 
 SPIDER_MODULES = ["postscrape.spiders"]
