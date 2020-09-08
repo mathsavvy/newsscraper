@@ -1,4 +1,5 @@
 # Scrapy_file
 open postscrape folder 
-the changes are done /postscrape/spiders/post_spiders.py file
-run scrapy crawl epaper for scrapy hindu newspaper.
+
+,the changes are done /postscrape/spiders/post_spiders.py file
+,run scrapy crawl epaper for scrapy hindu newspaper.
