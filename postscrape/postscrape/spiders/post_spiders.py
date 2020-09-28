@@ -19,7 +19,7 @@ class Epaper(scrapy.Spider):
 
     # def parse(self, response):
     #     request_token = response.xpath(
-    #         '//*[@id="sectionA"]/div[1]/div/form/input[1]/@value'
+    #         '//*[@id="sectiNionA"]/div[1]/div/form/input[1]/@value'
     #     ).extract_first()
     #     print("here", request_token)
     #     return FormRequest.from_response(
@@ -33,22 +33,31 @@ class Epaper(scrapy.Spider):
     #         callback=self.get_all_page,
     #     )
     def parse(self, response):
-        yield scrapy.Request(
-            url="http://epaper.thehindu.com/Home/GetAllpages?editionid=1&editiondate=07%2F09%2F2020",
+        for date in ['%s/05/2020'%(i) for i in range(1, 30)] :
+            yield scrapy.Request(
+            url= "http://epaper.thehindu.com/Home/GetAllpages?editionid=115&editiondate=%s" % date,
             callback=self.after_login,
-        )
+                cb_kwargs={
+                    "date": date,
+                },
+            )
         # scrapy.fetch('http://epaper.thehindu.com/Home/GetAllpages?editionid=1&editiondate=07%2F09%2F2020')
 
-    def after_login(self, response):
+    def after_login(self, response, date):
         print("hii shivam ", response)
         for i in json.loads(response.text):
             new_url = (
                 "https://epaper.thehindu.com/Home/getStoriesOnPage?pageid=%s"
                 % i["PageId"]
             )
-            yield scrapy.Request(url=new_url, callback=self.get_all_stories)
+            yield scrapy.Request(url=new_url,
+                                 callback=self.get_all_stories,
+                                 cb_kwargs={
+                                     "date": date,
+                                 },
+                                 )
 
-    def get_all_stories(self, response):
+    def get_all_stories(self, response, date):
         for i in json.loads(response.text):
             complete_url = (
                 "https://epaper.thehindu.com/User/ShowArticleView?OrgId=%s" % i["OrgId"]
@@ -63,26 +72,29 @@ class Epaper(scrapy.Spider):
                 cb_kwargs={
                     "storyid": i["storyid"],
                     "orgid": i["OrgId"],
+                    "date": date,
                     "title": i["storyTitle"],
                     "link": full_article_url,
                     "summary": i["Summary"],
                 },
             )
 
-    def in_each_stories(self, response, storyid, orgid, title, link, summary):
+    def in_each_stories(self, response, storyid, date, orgid, title, link, summary):
 
-        print(
-            "response = ",
-            response,
-            "storyid = ",
-            storyid,
-            "orgid = ",
-            orgid,
-            "title = ",
-            title,
-            "summary = ",
-            summary,
-        )
+        # print(
+        #     "response = ",
+        #     response,
+        #     "storyid = ",
+        #     storyid,
+        #     "date = ",
+        #     date,
+        #     "orgid = ",
+        #     orgid,
+        #     "title = ",
+        #     title,
+        #     "summary = ",
+        #     summary,
+        # )
 
         x = json.loads(response.text)
         # print()
@@ -90,6 +102,7 @@ class Epaper(scrapy.Spider):
         yield {
             "response = ": response,
             "storyid = ": storyid,
+            "date = ": date,
             "orgid = ": orgid,
             "title = ": title,
             "link = ": link,
@@ -117,28 +130,35 @@ class Chahal_Academy(scrapy.Spider):
     #     print(category)
     # print("category_urls")
 
-    start_urls = ["https://chahalacademy.com/"]
+    start_urls = ["https://chahalacademy.com/important-monthly-editorial/5/2020"]
 
     def parse(self, response):
         # print("here", type(response))
         # link of all the newspaper
-        x = response.css(
-            "#academyNav > div.classy-menu.m-auto > div.classynav > ul > li:nth-child(4) > ul li a::attr(href)"
-        ).getall()
-        for i in x:
-            request = scrapy.Request(
-                response.url + i,
-                callback=self.inside_website,
-                cb_kwargs={"base_url": response.url},
-            )
-            if "hindu" in i:
-                # print(i, "hindu")
-                request.cb_kwargs["site"] = "The Hindu"
-            elif "indian-express" in i:
-                request.cb_kwargs["site"] = "Indian-Express"
-            else:
-                request.cb_kwargs["site"] = "unknown - site"
-            yield request
+        request = scrapy.Request(
+            response.url,
+            callback=self.inside_website,
+            cb_kwargs={"base_url": "https://chahalacademy.com/"},
+        )
+        request.cb_kwargs["site"] = "The Hindu"
+        yield request
+        # x = response.css(
+        #     "#academyNav > div.classy-menu.m-auto > div.classynav > ul > li:nth-child(4) > ul li a::attr(href)"
+        # ).getall()
+        # for i in x:
+        #     request = scrapy.Request(
+        #         response.url + i,
+        #         callback=self.inside_website,
+        #         cb_kwargs={"base_url": response.url},
+        #     )
+        #     if "hindu" in i:
+        #         # print(i, "hindu")
+        #         request.cb_kwargs["site"] = "The Hindu"
+        #     elif "indian-express" in i:
+        #         request.cb_kwargs["site"] = "Indian-Express"
+        #     else:
+        #         request.cb_kwargs["site"] = "unknown - site"
+        #     yield request
 
     def inside_website(self, response, base_url, site):
 
@@ -369,18 +389,15 @@ class CivilsDaily(scrapy.Spider):
         # }
         return
 
-        return
-
-
 class PostsSpider(scrapy.Spider):
     name = "posts"
 
     def __init__(self, group=None, *args, **kwargs):
         super(PostsSpider, self).__init__(*args, **kwargs)
-        for i in range(1, 7):
+        for i in range(1, 32):
             base = (
-                "https://www.insightsonindia.com/2020/08/%s/insights-daily-current-affairs-pib-summary-%s-august-2020/"
-                % (str(18 + i), str(18 + i))
+                "https://www.insightsonindia.com/2020/01/%s/insights-daily-current-affairs-pib-summary-%s-january-2020/"
+                % (str(i), str(i))
             )
             self.start_urls.append(base)
 
