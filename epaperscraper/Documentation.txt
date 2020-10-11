@@ -1,0 +1,2 @@
+Today data - scrapy crawl epaper -o today_test.json
+Particular date data - scrapy crawl epaper -o ../../../missionpcs_dev/current_affairs/08-10-2020.json -a date="08/10/2020"
